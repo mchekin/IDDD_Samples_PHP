@@ -3,7 +3,6 @@
 
 namespace App\AgilePm\Domain\Model\Tenant;
 
-
 use Webmozart\Assert\Assert;
 
 class TenantId
