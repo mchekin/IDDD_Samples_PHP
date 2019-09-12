@@ -3,6 +3,7 @@
 namespace Tests\Unit\AgilePm\Domain\Model\Product;
 
 use App\AgilePm\Domain\Model\Product\ProductId;
+use App\AgilePm\Domain\Model\Team\ProductOwnerId;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
 use PHPUnit\Framework\TestCase;
 

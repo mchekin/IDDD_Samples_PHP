@@ -15,6 +15,6 @@ class TenantIdTest extends TestCase
 
         $tenantId = new TenantId($anId);
 
-        $this->assertEquals($anId, $tenantId->id());
+        $this->assertSame($anId, $tenantId->id());
     }
 }

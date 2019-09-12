@@ -14,6 +14,6 @@ class ProductIdTest extends TestCase
 
         $productId = new ProductId($anId);
 
-        $this->assertEquals($anId, $productId->id());
+        $this->assertSame($anId, $productId->id());
     }
 }
