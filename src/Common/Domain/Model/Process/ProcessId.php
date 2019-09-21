@@ -1,12 +1,11 @@
 <?php declare(strict_types=1);
 
 
-namespace App\AgilePm\Domain\Model\Product;
-
+namespace App\Common\Domain\Model\Process;
 
 use App\Common\Domain\Model\AbstractId;
 
-class ProductId extends AbstractId
+class ProcessId extends AbstractId
 {
     public function __construct(string $anId)
     {

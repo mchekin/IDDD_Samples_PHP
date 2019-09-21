@@ -5,14 +5,10 @@ namespace App\AgilePm\Domain\Model\Team;
 
 
 use App\AgilePm\Domain\Model\Tenant\TenantId;
-use Webmozart\Assert\Assert;
+use App\Common\Domain\Model\AbstractId;
 
-class ProductOwnerId
+class ProductOwnerId extends AbstractId
 {
-    /**
-     * @var string
-     */
-    private $id;
     /**
      * @var TenantId
      */
@@ -22,20 +18,7 @@ class ProductOwnerId
     {
         $this->aTenantId = $aTenantId;
 
-        $this->setId($anId);
-    }
-
-    private function setId(string $anId): void
-    {
-        Assert::stringNotEmpty('The product owner identity is required.');
-        Assert::uuid($anId, "The product owner identity $anId must be UUID");
-
-        $this->id = $anId;
-    }
-
-    public function id():string
-    {
-        return $this->id;
+        parent::__construct($anId);
     }
 
     public function tenantId(): TenantId
