@@ -3,12 +3,18 @@
 namespace Tests\Unit\AgilePm\Domain\Model\Team;
 
 use App\AgilePm\Domain\Model\Team\ProductOwner;
+use App\AgilePm\Domain\Model\Team\ProductOwnerId;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
 use Carbon\Carbon;
+use Exception;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 
 class ProductOwnerTest extends TestCase
 {
+    /**
+     * @throws Exception
+     */
     public function testCreate()
     {
         $aUsername = 'john.smith';
@@ -16,7 +22,7 @@ class ProductOwnerTest extends TestCase
         $aLastName = 'Smith';
         $anEmailAddress = 'john.smith@email.com';
         $anInitializedOn = Carbon::now();
-        $aTenantId = new TenantId('062be292-2718-44a8-aae6-7612cebaa9b9');
+        $aTenantId = new TenantId(Uuid::uuid4()->toString());
 
         $productOwner = new ProductOwner(
             $aTenantId,
@@ -27,11 +33,8 @@ class ProductOwnerTest extends TestCase
             $anInitializedOn
         );
 
-        $this->assertSame($aTenantId, $productOwner->tenantId());
-        $this->assertSame($aUsername, $productOwner->username());
-        $this->assertSame($aFirstName, $productOwner->firstName());
-        $this->assertSame($aLastName, $productOwner->lastName());
-        $this->assertSame($anEmailAddress, $productOwner->emailAddress());
-        $this->assertSame($anInitializedOn, $productOwner->initializedOn());
+        $this->assertSame($aTenantId, $productOwner->getTenantId());
+        $this->assertSame($aUsername, $productOwner->getUsername());
+        $this->assertEquals(new ProductOwnerId($aTenantId, $aUsername), $productOwner->productOwnerId());
     }
 }

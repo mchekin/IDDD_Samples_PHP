@@ -4,7 +4,6 @@
 namespace Tests\Unit\AgilePm\Domain\Model\Tenant;
 
 use App\AgilePm\Domain\Model\Product\BacklogItem\BacklogItemId;
-use App\AgilePm\Domain\Model\Product\ProductId;
 use PHPUnit\Framework\TestCase;
 
 class BacklogItemIdTest extends TestCase

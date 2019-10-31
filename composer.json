@@ -15,6 +15,7 @@
   "require": {
     "php": ">=7.2",
     "nesbot/carbon": "^2.24",
+    "ramsey/uuid": "^3.8",
     "webmozart/assert": "^1.5"
   },
   "autoload": {

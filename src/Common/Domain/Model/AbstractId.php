@@ -18,7 +18,7 @@ abstract class AbstractId
 
     private function setId(string $anId): void
     {
-        Assert::stringNotEmpty('The basic identity is required.');
+        Assert::stringNotEmpty($anId, 'The basic identity is required.');
         Assert::uuid($anId, "The basic identity $anId must be UUID");
 
         $this->id = $anId;

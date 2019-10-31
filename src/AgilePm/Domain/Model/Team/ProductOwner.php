@@ -7,32 +7,8 @@ namespace App\AgilePm\Domain\Model\Team;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
 use Carbon\Carbon;
 
-class ProductOwner
+class ProductOwner extends Member
 {
-    /**
-     * @var TenantId
-     */
-    private $aTenantId;
-    /**
-     * @var String
-     */
-    private $aUsername;
-    /**
-     * @var String
-     */
-    private $aFirstName;
-    /**
-     * @var String
-     */
-    private $aLastName;
-    /**
-     * @var String
-     */
-    private $anEmailAddress;
-    /**
-     * @var Carbon
-     */
-    private $anInitializedOn;
 
     public function __construct(
         TenantId $aTenantId,
@@ -42,42 +18,11 @@ class ProductOwner
         String $anEmailAddress,
         Carbon $anInitializedOn)
     {
-
-        $this->aTenantId = $aTenantId;
-        $this->aUsername = $aUsername;
-        $this->aFirstName = $aFirstName;
-        $this->aLastName = $aLastName;
-        $this->anEmailAddress = $anEmailAddress;
-        $this->anInitializedOn = $anInitializedOn;
+        parent::__construct($aTenantId, $aUsername, $aFirstName, $aLastName, $anEmailAddress, $anInitializedOn);
     }
 
-    public function tenantId(): TenantId
+    public function productOwnerId(): ProductOwnerId
     {
-        return $this->aTenantId;
-    }
-
-    public function username(): String
-    {
-        return $this->aUsername;
-    }
-
-    public function firstName(): String
-    {
-        return $this->aFirstName;
-    }
-
-    public function lastName(): String
-    {
-        return $this->aLastName;
-    }
-
-    public function emailAddress(): String
-    {
-        return $this->anEmailAddress;
-    }
-
-    public function initializedOn(): Carbon
-    {
-        return $this->anInitializedOn;
+        return new ProductOwnerId($this->getTenantId(), $this->getUsername());
     }
 }
