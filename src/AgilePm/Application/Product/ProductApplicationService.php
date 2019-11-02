@@ -58,7 +58,6 @@ class ProductApplicationService
         DiscussionAvailability $aDiscussionAvailability
     ) {
         $tenantId = new TenantId($aTenantId);
-        $productId = null;
 
         // ApplicationServiceLifeCycle.begin();
 
@@ -80,10 +79,12 @@ class ProductApplicationService
 
             //ApplicationServiceLifeCycle.success();
 
+            return $productId->id();
+
         } catch (RuntimeException $exception) {
             //ApplicationServiceLifeCycle.fail(e);
-        }
 
-        return $productId->id();
+            throw $exception;
+        }
     }
 }
