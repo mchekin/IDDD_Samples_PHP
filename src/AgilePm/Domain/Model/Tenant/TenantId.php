@@ -1,15 +1,19 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\AgilePm\Domain\Model\Tenant;
 
-use Webmozart\Assert\Assert;
+use App\AgilePm\Domain\Model\ValueObject;
 
-final readonly class TenantId
+final class TenantId extends ValueObject
 {
-    public function __construct(
-        private string $id
-    ) {
-        $this->validateId($id);
+    private string $id;
+
+    public function __construct(string $anId)
+    {
+        parent::__construct();
+        $this->setId($anId);
     }
 
     public static function fromTenantId(TenantId $tenantId): self
@@ -27,14 +31,19 @@ final readonly class TenantId
         return $this->id === $other->id;
     }
 
+    public function hashCode(): int
+    {
+        return (2785 * 5) + crc32($this->id);
+    }
+
     public function __toString(): string
     {
         return "TenantId [id={$this->id}]";
     }
 
-    private function validateId(string $id): void
+    private function setId(string $id): void
     {
-        Assert::stringNotEmpty($id, 'The tenant identity is required.');
-        Assert::maxLength($id, 36, 'The tenant identity must be 36 characters or less.');
+        $this->assertArgumentNotEmpty($id, 'The tenant identity is required.');
+        $this->assertArgumentLength($id, 36, 'The tenant identity must be 36 characters or less.');
     }
 }
