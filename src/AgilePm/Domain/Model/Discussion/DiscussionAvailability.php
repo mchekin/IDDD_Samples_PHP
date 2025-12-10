@@ -1,58 +1,49 @@
 <?php declare(strict_types=1);
 
-
 namespace App\AgilePm\Domain\Model\Discussion;
 
-
-abstract class DiscussionAvailability
+enum DiscussionAvailability: string
 {
-    public static function addOnNotEnabled(): DiscussionAvailability
-    {
-        return new DiscussionAvailabilityAddOnNotEnabled();
-    }
+    case ADD_ON_NOT_ENABLED = 'add_on_not_enabled';
+    case FAILED = 'failed';
+    case NOT_REQUESTED = 'not_requested';
+    case REQUESTED = 'requested';
+    case READY = 'ready';
 
-    public static function failed(): DiscussionAvailability
-    {
-        return new DiscussionAvailabilityFailed();
-    }
-
-    public static function notRequested(): DiscussionAvailability
-    {
-        return new DiscussionAvailabilityNotRequested();
-    }
-
-    public static function requested(): DiscussionAvailability
-    {
-        return new DiscussionAvailabilityRequested();
-    }
-
-    public static function ready(): DiscussionAvailability
-    {
-        return new DiscussionAvailabilityReady();
-    }
 
     public function isAddOnNotAvailable(): bool
     {
-        return false;
+        return $this === self::ADD_ON_NOT_ENABLED;
     }
 
     public function isFailed(): bool
     {
-        return false;
+        return $this === self::FAILED;
     }
 
     public function isNotRequested(): bool
     {
-        return false;
+        return $this === self::NOT_REQUESTED;
     }
 
     public function isReady(): bool
     {
-        return false;
+        return $this === self::READY;
     }
 
     public function isRequested(): bool
     {
-        return false;
+        return $this === self::REQUESTED;
+    }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::ADD_ON_NOT_ENABLED => 'Add-on Not Enabled',
+            self::FAILED => 'Failed',
+            self::NOT_REQUESTED => 'Not Requested',
+            self::REQUESTED => 'Requested',
+            self::READY => 'Ready',
+        };
     }
 }
