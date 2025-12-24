@@ -1,30 +1,29 @@
 <?php declare(strict_types=1);
 
-
 namespace App\Common\Domain\Model;
-
 
 use Webmozart\Assert\Assert;
 
-abstract class AbstractId
+abstract readonly class AbstractId
 {
-    /** @var string */
-    private $id;
-
-    public function __construct(string $anId)
-    {
-        $this->setId($anId);
+    public function __construct(
+        private string $id
+    ) {
+        Assert::stringNotEmpty($id, 'The basic identity is required.');
+        Assert::uuid($id, "The basic identity {$id} must be UUID");
     }
 
-    private function setId(string $anId): void
+    public function id(): string
     {
-        Assert::stringNotEmpty($anId, 'The basic identity is required.');
-        Assert::uuid($anId, "The basic identity $anId must be UUID");
-
-        $this->id = $anId;
+        return $this->id;
     }
 
-    public function id():string
+    public function equals(AbstractId $other): bool
+    {
+        return $this::class === $other::class && $this->id === $other->id;
+    }
+
+    public function __toString(): string
     {
         return $this->id;
     }
