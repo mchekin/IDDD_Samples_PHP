@@ -1,11 +1,12 @@
-<?php declare(strict_types=1);
+<?php
 
+declare(strict_types=1);
 
 namespace App\Common\Domain\Model\Process;
 
 use App\Common\Domain\Model\AbstractId;
 
-class ProcessId extends AbstractId
+final readonly class ProcessId extends AbstractId
 {
     public function __construct(string $anId)
     {
