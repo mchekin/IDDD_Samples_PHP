@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\AgilePm\Domain\Model\Product;
 
@@ -39,7 +41,7 @@ class Product extends Entity
         string $aDescription,
         DiscussionAvailability $aDiscussionAvailability
     ) {
-        parent::__construct();
+        $this->initializeDefault();
 
         $this->setTenantId($aTenantId);
         $this->setDescription($aDescription);
@@ -301,8 +303,8 @@ class Product extends Entity
     {
         $hashCodeValue =
             + (2335 * 3)
-            + $this->tenantId()->hashCode()
-            + $this->productId()->hashCode();
+                + $this->tenantId()->hashCode()
+                + $this->productId()->hashCode();
 
         return $hashCodeValue;
     }
@@ -310,10 +312,10 @@ class Product extends Entity
     public function __toString(): string
     {
         return "Product [tenantId={$this->tenantId}, productId={$this->productId}"
-                . ", backlogItems=" . count($this->backlogItems) . ", description="
-                . $this->description . ", discussion={$this->discussion}"
-                . ", discussionInitiationId={$this->discussionInitiationId}"
-                . ", name={$this->name}, productOwnerId={$this->productOwnerId}]";
+            . ", backlogItems=" . count($this->backlogItems) . ", description="
+            . $this->description . ", discussion={$this->discussion}"
+            . ", discussionInitiationId={$this->discussionInitiationId}"
+            . ", name={$this->name}, productOwnerId={$this->productOwnerId}]";
     }
 
     private function backlogItems(): array
@@ -388,7 +390,7 @@ class Product extends Entity
         $this->tenantId = $aTenantId;
     }
 
-    private function __construct()
+    private function initializeDefault(): void
     {
         parent::__construct();
 
