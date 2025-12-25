@@ -1,116 +1,229 @@
 <?php declare(strict_types=1);
 
-
 namespace Tests\Unit\AgilePm\Application\Product;
 
+use App\AgilePm\Application\Product\InitiateDiscussionCommand;
 use App\AgilePm\Application\Product\NewProductCommand;
-use App\AgilePm\Application\Product\ProductApplicationService;
-use App\AgilePm\Domain\Model\Discussion\DiscussionAvailabilityNotRequested;
+use App\AgilePm\Application\Product\RequestProductDiscussionCommand;
+use App\AgilePm\Application\Product\RetryProductDiscussionRequestCommand;
+use App\AgilePm\Application\Product\StartDiscussionInitiationCommand;
+use App\AgilePm\Domain\Model\Discussion\DiscussionAvailability;
 use App\AgilePm\Domain\Model\Product\Product;
 use App\AgilePm\Domain\Model\Product\ProductId;
-use App\AgilePm\Domain\Model\Product\ProductRepository;
 use App\AgilePm\Domain\Model\Team\ProductOwner;
 use App\AgilePm\Domain\Model\Team\ProductOwnerId;
-use App\AgilePm\Domain\Model\Team\ProductOwnerRepository;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
-use App\Common\Domain\Model\Process\TimeConstrainedProcessTrackerRepository;
 use Exception;
 use Mockery;
-use Mockery\MockInterface;
-use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
+use Tests\Unit\AgilePm\Application\ProductApplicationCommonTest;
 
-class ProductApplicationServiceTest extends TestCase
+class ProductApplicationServiceTest extends ProductApplicationCommonTest
 {
-    /** @var ProductRepository|MockInterface */
-    private $productRepository;
 
-    /** @var ProductOwnerRepository|MockInterface */
-    private $productOwnerRepository;
-
-    /** @var TimeConstrainedProcessTrackerRepository|MockInterface */
-    private $processTrackerRepository;
-
-    /** @var NewProductCommand|MockInterface */
-    private $newProductCommand;
-
-    /** @var ProductId|MockInterface */
-    private $productId;
-
-    /** @var ProductOwner|MockInterface */
-    private $productOwner;
-
-    /** @var ProductOwnerId|MockInterface */
-    private $productOwnerId;
-
-    /** @var ProductApplicationService */
-    private $sut;
-
-    protected function setUp(): void
+    public function testDiscussionProcess(): void
     {
-        parent::setUp();
+        $product = $this->persistedProductForTest();
 
-        $this->productRepository = Mockery::mock(ProductRepository::class);
-        $this->productOwnerRepository = Mockery::mock(ProductOwnerRepository::class);
-        $this->processTrackerRepository = Mockery::mock(TimeConstrainedProcessTrackerRepository::class);
-        $this->newProductCommand = Mockery::mock(NewProductCommand::class);
-        $this->productId = Mockery::mock(ProductId::class);
-        $this->productOwner = Mockery::mock(ProductOwner::class);
-        $this->productOwnerId = Mockery::mock(ProductOwnerId::class);
-
-        $this->sut = new ProductApplicationService(
-            $this->productRepository,
-            $this->productOwnerRepository,
-            $this->processTrackerRepository
+        $this->productApplicationService->requestProductDiscussion(
+            new RequestProductDiscussionCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
         );
+
+        $this->productApplicationService->startDiscussionInitiation(
+            new StartDiscussionInitiationCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
+
+        $productWithStartedDiscussionInitiation = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertNotNull($productWithStartedDiscussionInitiation->discussionInitiationId());
+
+        $discussionId = strtoupper(Uuid::uuid4()->toString());
+
+        $command = new InitiateDiscussionCommand(
+            $product->tenantId()->id(),
+            $product->productId()->id(),
+            $discussionId
+        );
+
+        $this->productApplicationService->initiateDiscussion($command);
+
+        $productWithInitiatedDiscussion = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertEquals($discussionId, $productWithInitiatedDiscussion->discussion()->descriptor()->id());
     }
 
-    protected function tearDown(): void
+    public function testNewProduct(): void
     {
-        Mockery::close();
+        $productOwner = $this->persistedProductOwnerForTest();
 
-        parent::tearDown();
+        $newProductId = $this->productApplicationService->newProduct(
+            new NewProductCommand(
+                'T-12345',
+                $productOwner->productOwnerId()->id(),
+                'My Product',
+                'The description of My Product.'
+            )
+        );
+
+        $newProduct = $this->productRepository
+            ->productOfId(
+                $productOwner->tenantId(),
+                new ProductId($newProductId)
+            );
+
+        $this->assertNotNull($newProduct);
+        $this->assertEquals('My Product', $newProduct->name());
+        $this->assertEquals('The description of My Product.', $newProduct->description());
     }
 
-    /**
-     * @throws Exception
-     */
-    public function testCreatesNewProduct()
+    public function testNewProductWithDiscussion(): void
     {
-        $tenantId = Uuid::uuid4()->toString();
-        $productOwnerId = Uuid::uuid4()->toString();
-        $name = 'Self-heating socks';
-        $description = 'A pair of self-heating socks.';
-        $newProductId = Uuid::uuid4()->toString();
+        $productOwner = $this->persistedProductOwnerForTest();
 
-        $this->newProductCommand->expects('getTenantId')->andReturn($tenantId);
-        $this->newProductCommand->expects('getProductOwnerId')->andReturn($productOwnerId);
-        $this->newProductCommand->expects('getName')->andReturn($name);
-        $this->newProductCommand->expects('getDescription')->andReturn($description);
+        $newProductId = $this->productApplicationService->newProductWithDiscussion(
+            new NewProductCommand(
+                'T-12345',
+                $productOwner->productOwnerId()->id(),
+                'My Product',
+                'The description of My Product.'
+            )
+        );
 
-        $this->productRepository->expects('nextIdentity')->andReturn($this->productId);
+        $newProduct = $this->productRepository
+            ->productOfId(
+                $productOwner->tenantId(),
+                new ProductId($newProductId)
+            );
 
-        $this->productOwnerRepository->expects('productOwnerOfIdentity')
-            ->with(\Mockery::on(function (TenantId $argument) use ($tenantId) {
-                return $tenantId === $argument->id();
-            }), $productOwnerId)
-            ->andReturn($this->productOwner);
+        $this->assertNotNull($newProduct);
+        $this->assertEquals('My Product', $newProduct->name());
+        $this->assertEquals('The description of My Product.', $newProduct->description());
+        $this->assertEquals(DiscussionAvailability::REQUESTED, $newProduct->discussion()->availability());
+    }
 
-        $this->productOwner->expects('productOwnerId')->andReturn($this->productOwnerId);
+    public function testRequestProductDiscussion(): void
+    {
+        $product = $this->persistedProductForTest();
 
-        $this->productRepository->expects('save')
-            ->with(\Mockery::on(function (Product $argument) use ($tenantId, $name, $description) {
-                return $this->productId === $argument->productId()
-                    && $this->productOwnerId === $argument->productOwnerId()
-                    && $tenantId === $argument->tenantId()->id()
-                    && $name === $argument->name()
-                    && $description === $argument->description()
-                    && get_class($argument->discussionAvailability()) === DiscussionAvailabilityNotRequested::class;
-            }))
-            ->andReturn($this->productOwner);
+        $this->productApplicationService->requestProductDiscussion(
+            new RequestProductDiscussionCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
 
-        $this->productId->expects('id')->andReturn($newProductId);
+        $productWithRequestedDiscussion = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
 
-        $this->assertSame($newProductId, $this->sut->newProduct($this->newProductCommand));
+        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+    }
+
+    public function testRetryProductDiscussionRequest(): void
+    {
+        $product = $this->persistedProductForTest();
+
+        $this->productApplicationService->requestProductDiscussion(
+            new RequestProductDiscussionCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
+
+        $productWithRequestedDiscussion = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+
+        $this->productApplicationService->startDiscussionInitiation(
+            new StartDiscussionInitiationCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
+
+        $productWithDiscussionInitiation = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
+
+        $this->productApplicationService->retryProductDiscussionRequest(
+            new RetryProductDiscussionRequestCommand(
+                $product->tenantId()->id(),
+                $productWithDiscussionInitiation->discussionInitiationId()
+            )
+        );
+
+        $productWithRetriedRequestedDiscussion = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRetriedRequestedDiscussion->discussion()->availability());
+        $this->assertEquals($productWithDiscussionInitiation->discussionInitiationId(), $productWithRetriedRequestedDiscussion->discussionInitiationId());
+    }
+
+    public function testStartDiscussionInitiation(): void
+    {
+        $product = $this->persistedProductForTest();
+
+        $this->productApplicationService->requestProductDiscussion(
+            new RequestProductDiscussionCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
+
+        $productWithRequestedDiscussion = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+        $this->assertNull($productWithRequestedDiscussion->discussionInitiationId());
+
+        $this->productApplicationService->startDiscussionInitiation(
+            new StartDiscussionInitiationCommand(
+                $product->tenantId()->id(),
+                $product->productId()->id()
+            )
+        );
+
+        $productWithDiscussionInitiation = $this->productRepository
+            ->productOfId(
+                $product->tenantId(),
+                $product->productId()
+            );
+
+        $this->assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
+    }
+
+    public function testTimeOutProductDiscussionRequest(): void
+    {
+        // TODO: student assignment
     }
 }
