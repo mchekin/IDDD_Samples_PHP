@@ -1,5 +1,6 @@
-<?php declare(strict_types=1);
+<?php
 
+declare(strict_types=1);
 
 namespace App\AgilePm\Application\Product;
 
@@ -46,7 +47,7 @@ class ProductApplicationService
             $aCommand->getProductOwnerId(),
             $aCommand->getName(),
             $aCommand->getDescription(),
-            DiscussionAvailability::notRequested()
+            DiscussionAvailability::NOT_REQUESTED
         );
     }
 
@@ -56,7 +57,7 @@ class ProductApplicationService
         string $aName,
         string $aDescription,
         DiscussionAvailability $aDiscussionAvailability
-    ) {
+    ): string {
         $tenantId = new TenantId($aTenantId);
 
         // ApplicationServiceLifeCycle.begin();
@@ -80,7 +81,6 @@ class ProductApplicationService
             //ApplicationServiceLifeCycle.success();
 
             return $productId->id();
-
         } catch (RuntimeException $exception) {
             //ApplicationServiceLifeCycle.fail(e);
 
