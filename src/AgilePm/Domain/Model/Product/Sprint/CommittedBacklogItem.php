@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace App\AgilePm\Domain\Model\Product\Sprint;
 
@@ -14,9 +16,9 @@ class CommittedBacklogItem extends Entity
     private TenantId $tenantId;
 
     public function __construct(
-        TenantId $aTenantId = null,
-        SprintId $aSprintId = null,
-        BacklogItemId $aBacklogItemId = null,
+        ?TenantId $aTenantId = null,
+        ?SprintId $aSprintId = null,
+        ?BacklogItemId $aBacklogItemId = null,
         int $anOrdering = 0
     ) {
         if ($aTenantId === null && $aSprintId === null && $aBacklogItemId === null) {
