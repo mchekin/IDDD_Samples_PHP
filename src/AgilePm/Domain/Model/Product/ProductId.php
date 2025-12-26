@@ -45,5 +45,7 @@ final class ProductId extends ValueObject
     {
         $this->assertArgumentNotEmpty($id, 'The id must be provided.');
         $this->assertArgumentLength($id, 36, 'The id must be 36 characters or less.');
+
+        $this->id = $id;
     }
 }

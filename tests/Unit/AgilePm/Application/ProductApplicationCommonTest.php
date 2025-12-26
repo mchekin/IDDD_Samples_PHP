@@ -6,38 +6,31 @@ use App\AgilePm\Application\Product\ProductApplicationService;
 use App\AgilePm\Domain\Model\Discussion\DiscussionAvailability;
 use App\AgilePm\Domain\Model\Product\Product;
 use App\AgilePm\Domain\Model\Product\ProductId;
-use App\AgilePm\Domain\Model\Product\ProductRepository;
 use App\AgilePm\Domain\Model\Team\ProductOwner;
 use App\AgilePm\Domain\Model\Team\ProductOwnerId;
-use App\AgilePm\Domain\Model\Team\ProductOwnerRepository;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
-use App\Common\Domain\Model\Process\TimeConstrainedProcessTrackerRepository;
 use DateTime;
-use Mockery;
-use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
+use Tests\Unit\AgilePm\Infrastructure\InMemoryProductOwnerRepository;
+use Tests\Unit\AgilePm\Infrastructure\InMemoryProductRepository;
+use Tests\Unit\AgilePm\Infrastructure\InMemoryTimeConstrainedProcessTrackerRepository;
 
 abstract class ProductApplicationCommonTest extends TestCase
 {
-    /** @var ProductRepository|MockInterface */
-    protected $productRepository;
-    
-    /** @var ProductOwnerRepository|MockInterface */
-    protected $productOwnerRepository;
-    
-    /** @var TimeConstrainedProcessTrackerRepository|MockInterface */
-    protected $timeConstrainedProcessTrackerRepository;
-    
+    protected InMemoryProductRepository $productRepository;
+    protected InMemoryProductOwnerRepository $productOwnerRepository;
+    protected InMemoryTimeConstrainedProcessTrackerRepository $timeConstrainedProcessTrackerRepository;
     protected ProductApplicationService $productApplicationService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->productRepository = Mockery::mock(ProductRepository::class);
-        $this->productOwnerRepository = Mockery::mock(ProductOwnerRepository::class);
-        $this->timeConstrainedProcessTrackerRepository = Mockery::mock(TimeConstrainedProcessTrackerRepository::class);
+        // Like Java's LevelDBProvider.purge() - start with clean repositories
+        $this->productRepository = new InMemoryProductRepository();
+        $this->productOwnerRepository = new InMemoryProductOwnerRepository();
+        $this->timeConstrainedProcessTrackerRepository = new InMemoryTimeConstrainedProcessTrackerRepository();
 
         $this->productApplicationService = new ProductApplicationService(
             $this->productRepository,
@@ -48,17 +41,21 @@ abstract class ProductApplicationCommonTest extends TestCase
 
     protected function tearDown(): void
     {
-        Mockery::close();
+        // Like Java's LevelDBProvider.purge() - clean up after test
+        $this->productRepository->clear();
+        $this->productOwnerRepository->clear();
+        $this->timeConstrainedProcessTrackerRepository->clear();
+
         parent::tearDown();
     }
 
     protected function persistedProductForTest(): Product
     {
         $product = $this->productForTest();
-        
-        $this->productRepository->expects('save')
-            ->with($product);
-            
+
+        // Actually save like Java's LevelDBUnitOfWork pattern
+        $this->productRepository->save($product);
+
         return $product;
     }
 
@@ -66,16 +63,18 @@ abstract class ProductApplicationCommonTest extends TestCase
     {
         $tenantId = new TenantId('T-12345');
         $productOwnerId = new ProductOwnerId($tenantId, 'zoe');
-        
-        $productOwner = Mockery::mock(ProductOwner::class);
-        $productOwner->shouldReceive('tenantId')->andReturn($tenantId);
-        $productOwner->shouldReceive('productOwnerId')->andReturn($productOwnerId);
-        $productOwner->shouldReceive('firstName')->andReturn('Zoe');
-        $productOwner->shouldReceive('lastName')->andReturn('Doe');
-        $productOwner->shouldReceive('emailAddress')->andReturn('zoe@saasovation.com');
 
-        $this->productOwnerRepository->expects('save')
-            ->with($productOwner);
+        $productOwner = new ProductOwner(
+            $tenantId,
+            'zoe',
+            'Zoe',
+            'Doe',
+            'zoe@saasovation.com',
+            new DateTime('-30 days')
+        );
+
+        // Actually save like Java
+        $this->productOwnerRepository->save($productOwner);
 
         return $productOwner;
     }

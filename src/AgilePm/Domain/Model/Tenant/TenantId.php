@@ -45,5 +45,7 @@ final class TenantId extends ValueObject
     {
         $this->assertArgumentNotEmpty($id, 'The tenant identity is required.');
         $this->assertArgumentLength($id, 36, 'The tenant identity must be 36 characters or less.');
+
+        $this->id = $id;
     }
 }
