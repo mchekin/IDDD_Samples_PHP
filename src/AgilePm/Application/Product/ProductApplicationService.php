@@ -111,45 +111,65 @@ class ProductApplicationService
 
     public function requestProductDiscussion(RequestProductDiscussionCommand $aCommand): void
     {
-        $product = $this->productRepository()
-            ->productOfId(
-                new TenantId($aCommand->getTenantId()),
-                new ProductId($aCommand->getProductId())
-            );
+        ApplicationServiceLifeCycle::begin();
 
-        if ($product === null) {
-            throw new \InvalidArgumentException(
-                'Unknown product of tenant id: '
-                . $aCommand->getTenantId()
-                . ' and product id: '
-                . $aCommand->getProductId()
-            );
+        try {
+            $product = $this->productRepository()
+                ->productOfId(
+                    new TenantId($aCommand->getTenantId()),
+                    new ProductId($aCommand->getProductId())
+                );
+
+            if ($product === null) {
+                throw new \InvalidArgumentException(
+                    'Unknown product of tenant id: '
+                    . $aCommand->getTenantId()
+                    . ' and product id: '
+                    . $aCommand->getProductId()
+                );
+            }
+
+            $product->requestDiscussion($this->requestDiscussionIfAvailable());
+
+            $this->productRepository()->save($product);
+
+            ApplicationServiceLifeCycle::success();
+        } catch (RuntimeException $e) {
+            ApplicationServiceLifeCycle::fail($e);
         }
-
-        $this->requestProductDiscussionFor($product);
     }
 
     public function retryProductDiscussionRequest(RetryProductDiscussionRequestCommand $aCommand): void
     {
-        $processId = ProcessId::existingProcessId($aCommand->getProcessId());
-        $tenantId = new TenantId($aCommand->getTenantId());
+        ApplicationServiceLifeCycle::begin();
 
-        $product = $this->productRepository()
-            ->productOfDiscussionInitiationId(
-                $tenantId,
-                $processId->id()
-            );
+        try {
+            $processId = ProcessId::existingProcessId($aCommand->getProcessId());
+            $tenantId = new TenantId($aCommand->getTenantId());
 
-        if ($product === null) {
-            throw new \InvalidArgumentException(
-                'Unknown product of tenant id: '
-                . $aCommand->getTenantId()
-                . ' and discussion initiation id: '
-                . $processId->id()
-            );
+            $product = $this->productRepository()
+                ->productOfDiscussionInitiationId(
+                    $tenantId,
+                    $processId->id()
+                );
+
+            if ($product === null) {
+                throw new \InvalidArgumentException(
+                    'Unknown product of tenant id: '
+                    . $aCommand->getTenantId()
+                    . ' and discussion initiation id: '
+                    . $processId->id()
+                );
+            }
+
+            $product->requestDiscussion($this->requestDiscussionIfAvailable());
+
+            $this->productRepository()->save($product);
+
+            ApplicationServiceLifeCycle::success();
+        } catch (RuntimeException $e) {
+            ApplicationServiceLifeCycle::fail($e);
         }
-
-        $this->requestProductDiscussionFor($product);
     }
 
     public function startDiscussionInitiation(StartDiscussionInitiationCommand $aCommand): void
@@ -221,7 +241,7 @@ class ProductApplicationService
     ): string {
         $tenantId = new TenantId($aTenantId);
 
-        // ApplicationServiceLifeCycle.begin();
+        ApplicationServiceLifeCycle::begin();
 
         try {
             $productId = $this->productRepository->nextIdentity();
@@ -283,17 +303,9 @@ class ProductApplicationService
 
     private function requestProductDiscussionFor(Product $aProduct): void
     {
-        ApplicationServiceLifeCycle::begin();
+        $aProduct->requestDiscussion($this->requestDiscussionIfAvailable());
 
-        try {
-            $aProduct->requestDiscussion($this->requestDiscussionIfAvailable());
-
-            $this->productRepository()->save($aProduct);
-
-            ApplicationServiceLifeCycle::success();
-        } catch (RuntimeException $e) {
-            ApplicationServiceLifeCycle::fail($e);
-        }
+        $this->productRepository()->save($aProduct);
     }
 
     private function processTrackerOfProduct(Product $aProduct): TimeConstrainedProcessTracker

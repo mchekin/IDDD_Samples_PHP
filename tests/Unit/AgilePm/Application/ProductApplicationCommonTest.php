@@ -9,28 +9,50 @@ use App\AgilePm\Domain\Model\Product\ProductId;
 use App\AgilePm\Domain\Model\Team\ProductOwner;
 use App\AgilePm\Domain\Model\Team\ProductOwnerId;
 use App\AgilePm\Domain\Model\Tenant\TenantId;
+use App\AgilePm\Port\Adapter\Persistence\SQLiteDatabasePath;
+use App\AgilePm\Port\Adapter\Persistence\SQLiteProductOwnerRepository;
+use App\AgilePm\Port\Adapter\Persistence\SQLiteProductRepository;
+use App\Common\Port\Adapter\Persistence\SQLite\SQLiteProvider;
+use App\Common\Port\Adapter\Persistence\SQLite\SQLiteTimeConstrainedProcessTrackerRepository;
+use App\Common\Port\Adapter\Persistence\SQLite\SQLiteUnitOfWork;
 use DateTime;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
-use Tests\Unit\AgilePm\Infrastructure\InMemoryProductOwnerRepository;
-use Tests\Unit\AgilePm\Infrastructure\InMemoryProductRepository;
-use Tests\Unit\AgilePm\Infrastructure\InMemoryTimeConstrainedProcessTrackerRepository;
+use PDO;
 
 abstract class ProductApplicationCommonTest extends TestCase
 {
-    protected InMemoryProductRepository $productRepository;
-    protected InMemoryProductOwnerRepository $productOwnerRepository;
-    protected InMemoryTimeConstrainedProcessTrackerRepository $timeConstrainedProcessTrackerRepository;
+    protected SQLiteProductRepository $productRepository;
+    protected SQLiteProductOwnerRepository $productOwnerRepository;
+    protected SQLiteTimeConstrainedProcessTrackerRepository $timeConstrainedProcessTrackerRepository;
     protected ProductApplicationService $productApplicationService;
+    protected PDO $database;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Like Java's LevelDBProvider.purge() - start with clean repositories
-        $this->productRepository = new InMemoryProductRepository();
-        $this->productOwnerRepository = new InMemoryProductOwnerRepository();
-        $this->timeConstrainedProcessTrackerRepository = new InMemoryTimeConstrainedProcessTrackerRepository();
+        // Like Java's LevelDBProvider - get database and purge before test
+        $databasePath = SQLiteDatabasePath::agilePMTestPath();
+
+        // Close any existing connection first
+        SQLiteProvider::instance()->close($databasePath);
+
+        // Delete the database file to ensure clean state (avoid locks)
+        if (file_exists($databasePath)) {
+            @unlink($databasePath);
+        }
+
+        // Open fresh database
+        $this->database = SQLiteProvider::instance()->databaseFrom($databasePath);
+
+        // Start UnitOfWork for the test (like Java's ApplicationServiceLifeCycle)
+        SQLiteUnitOfWork::start($this->database);
+
+        // Create repositories with SQLite backend (like Java's LevelDB repositories)
+        $this->productRepository = new SQLiteProductRepository($databasePath);
+        $this->productOwnerRepository = new SQLiteProductOwnerRepository($databasePath);
+        $this->timeConstrainedProcessTrackerRepository = new SQLiteTimeConstrainedProcessTrackerRepository($databasePath);
 
         $this->productApplicationService = new ProductApplicationService(
             $this->productRepository,
@@ -41,10 +63,25 @@ abstract class ProductApplicationCommonTest extends TestCase
 
     protected function tearDown(): void
     {
-        // Like Java's LevelDBProvider.purge() - clean up after test
-        $this->productRepository->clear();
-        $this->productOwnerRepository->clear();
-        $this->timeConstrainedProcessTrackerRepository->clear();
+        // Commit or rollback the UnitOfWork at the end of the test
+        try {
+            $unitOfWork = SQLiteUnitOfWork::current();
+            try {
+                $unitOfWork->commit();
+            } catch (\Exception $e) {
+                // If commit fails, rollback
+                try {
+                    $unitOfWork->rollback();
+                } catch (\Exception $rollbackException) {
+                    // Ignore rollback failures
+                }
+            }
+        } catch (\RuntimeException $e) {
+            // No active UnitOfWork, that's fine
+        }
+
+        // Close the database connection
+        SQLiteProvider::instance()->close(SQLiteDatabasePath::agilePMTestPath());
 
         parent::tearDown();
     }
@@ -53,7 +90,13 @@ abstract class ProductApplicationCommonTest extends TestCase
     {
         $product = $this->productForTest();
 
-        // Actually save like Java's LevelDBUnitOfWork pattern
+        // Start UnitOfWork if not already started, and keep it active for the whole test
+        try {
+            SQLiteUnitOfWork::current();
+        } catch (\RuntimeException $e) {
+            SQLiteUnitOfWork::start($this->database);
+        }
+
         $this->productRepository->save($product);
 
         return $product;
@@ -73,7 +116,13 @@ abstract class ProductApplicationCommonTest extends TestCase
             new DateTime('-30 days')
         );
 
-        // Actually save like Java
+        // Start UnitOfWork if not already started, and keep it active for the whole test
+        try {
+            SQLiteUnitOfWork::current();
+        } catch (\RuntimeException $e) {
+            SQLiteUnitOfWork::start($this->database);
+        }
+
         $this->productOwnerRepository->save($productOwner);
 
         return $productOwner;
