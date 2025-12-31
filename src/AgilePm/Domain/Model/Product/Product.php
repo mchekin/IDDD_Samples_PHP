@@ -41,7 +41,9 @@ class Product extends Entity
         string $aDescription,
         DiscussionAvailability $aDiscussionAvailability
     ) {
-        $this->initializeDefault();
+        parent::__construct();
+
+        $this->setBacklogItems([]);
 
         $this->setTenantId($aTenantId);
         $this->setDescription($aDescription);
@@ -102,10 +104,6 @@ class Product extends Entity
 
     public function initiateDiscussion(DiscussionDescriptor $aDescriptor): void
     {
-        if ($aDescriptor === null) {
-            throw new \InvalidArgumentException('The descriptor must not be null.');
-        }
-
         if ($this->discussion()->availability()->isRequested()) {
             $this->setDiscussion($this->discussion()->nowReady($aDescriptor));
 
@@ -287,16 +285,12 @@ class Product extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && get_class($this) === get_class($anObject)) {
-            $typedObject = $anObject;
-            $equalObjects =
-                $this->tenantId()->equals($typedObject->tenantId()) &&
-                $this->productId()->equals($typedObject->productId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->productId()->equals($anObject->productId());
     }
 
     public function hashCode(): int
@@ -313,7 +307,7 @@ class Product extends Entity
     {
         return "Product [tenantId={$this->tenantId}, productId={$this->productId}"
             . ", backlogItems=" . count($this->backlogItems) . ", description="
-            . $this->description . ", discussion={$this->discussion}"
+            . $this->description . ", discussion=" . $this->discussion->__toString()
             . ", discussionInitiationId={$this->discussionInitiationId}"
             . ", name={$this->name}, productOwnerId={$this->productOwnerId}]";
     }
@@ -388,12 +382,5 @@ class Product extends Entity
         $this->assertArgumentNotNull($aTenantId, 'The tenantId must be provided.');
 
         $this->tenantId = $aTenantId;
-    }
-
-    private function initializeDefault(): void
-    {
-        parent::__construct();
-
-        $this->setBacklogItems([]);
     }
 }

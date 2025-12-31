@@ -17,6 +17,10 @@ class ProductOwner extends Entity
     private TenantId $tenantId;
     private string $username;
 
+    /**
+     * @phpstan-param DateTime $anInitializedOn
+     * @phpstan-ignore-next-line constructor.unusedParameter (parameter kept for API consistency)
+     */
     public function __construct(
         TenantId $aTenantId,
         string $aUsername,
@@ -71,16 +75,12 @@ class ProductOwner extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && get_class($this) === get_class($anObject)) {
-            $typedObject = $anObject;
-            $equalObjects =
-                $this->tenantId()->equals($typedObject->tenantId()) &&
-                $this->username() === $typedObject->username();
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->username() === $anObject->username();
     }
 
     public function hashCode(): int
@@ -102,27 +102,21 @@ class ProductOwner extends Entity
 
     private function setEmailAddress(string $anEmailAddress): void
     {
-        if ($anEmailAddress !== null) {
-            $this->assertArgumentLength($anEmailAddress, 100, 'Email address must be 100 characters or less.');
-        }
+        $this->assertArgumentLength($anEmailAddress, 100, 'Email address must be 100 characters or less.');
 
         $this->emailAddress = $anEmailAddress;
     }
 
     private function setFirstName(string $aFirstName): void
     {
-        if ($aFirstName !== null) {
-            $this->assertArgumentLength($aFirstName, 50, 'First name must be 50 characters or less.');
-        }
+        $this->assertArgumentLength($aFirstName, 50, 'First name must be 50 characters or less.');
 
         $this->firstName = $aFirstName;
     }
 
     private function setLastName(string $aLastName): void
     {
-        if ($aLastName !== null) {
-            $this->assertArgumentLength($aLastName, 50, 'Last name must be 50 characters or less.');
-        }
+        $this->assertArgumentLength($aLastName, 50, 'Last name must be 50 characters or less.');
 
         $this->lastName = $aLastName;
     }

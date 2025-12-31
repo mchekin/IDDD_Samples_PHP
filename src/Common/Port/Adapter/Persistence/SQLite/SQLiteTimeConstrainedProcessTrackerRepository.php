@@ -14,11 +14,10 @@ use PDO;
  */
 class SQLiteTimeConstrainedProcessTrackerRepository implements TimeConstrainedProcessTrackerRepository
 {
-    private PDO $database;
-
     public function __construct(string $databasePath)
     {
-        $this->database = SQLiteProvider::instance()->databaseFrom($databasePath);
+        // Ensure database is initialized
+        SQLiteProvider::instance()->databaseFrom($databasePath);
     }
 
     public function add(TimeConstrainedProcessTracker $aTimeConstrainedProcessTracker): void
@@ -38,6 +37,10 @@ class SQLiteTimeConstrainedProcessTrackerRepository implements TimeConstrainedPr
         $stmt->execute([TimeConstrainedProcessTracker::class]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var TimeConstrainedProcessTracker $tracker */
             $tracker = $unitOfWork->deserializeFromJson($row['data'], TimeConstrainedProcessTracker::class);
             if (!$tracker->isCompleted()) {
                 $trackers[] = $tracker;
@@ -62,6 +65,10 @@ class SQLiteTimeConstrainedProcessTrackerRepository implements TimeConstrainedPr
         ]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var TimeConstrainedProcessTracker $tracker */
             $tracker = $unitOfWork->deserializeFromJson($row['data'], TimeConstrainedProcessTracker::class);
             if ($tracker->tenantId() === $aTenantId && !$tracker->isCompleted()) {
                 $trackers[] = $tracker;
@@ -86,6 +93,10 @@ class SQLiteTimeConstrainedProcessTrackerRepository implements TimeConstrainedPr
         ]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var TimeConstrainedProcessTracker $tracker */
             $tracker = $unitOfWork->deserializeFromJson($row['data'], TimeConstrainedProcessTracker::class);
             if ($tracker->tenantId() === $aTenantId) {
                 $trackers[] = $tracker;
@@ -114,6 +125,7 @@ class SQLiteTimeConstrainedProcessTrackerRepository implements TimeConstrainedPr
             throw new \RuntimeException('TimeConstrainedProcessTracker not found for process id: ' . $aProcessId->id());
         }
 
+        assert($tracker instanceof TimeConstrainedProcessTracker);
         return $tracker;
     }
 

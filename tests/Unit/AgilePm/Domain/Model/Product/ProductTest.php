@@ -11,14 +11,14 @@ use PHPUnit\Framework\TestCase;
 
 class ProductTest extends TestCase
 {
-    public function testCreate()
+    public function testCreate(): void
     {
         $aTenantId = new TenantId('062be292-2718-44a8-aae6-7612cebaa9b9');
         $aProductId = new ProductId('d75af329-03e2-4773-aba1-709abf096af6');
         $aProductOwnerId = new ProductOwnerId($aTenantId, '0ee27a2e-1697-4d68-9012-67bb665155c1');
         $aProductName = 'New Product';
         $aProductDescription = 'Description of a new product';
-        $aDiscussionAvailability = DiscussionAvailability::notRequested();
+        $aDiscussionAvailability = DiscussionAvailability::NOT_REQUESTED;
 
         $product = new Product(
             $aTenantId,
@@ -29,11 +29,11 @@ class ProductTest extends TestCase
             $aDiscussionAvailability
         );
 
-        $this->assertSame($aTenantId, $product->tenantId());
-        $this->assertSame($aProductId, $product->productId());
-        $this->assertSame($aProductOwnerId, $product->productOwnerId());
-        $this->assertSame($aProductName, $product->name());
-        $this->assertSame($aProductDescription, $product->description());
-        $this->assertSame($aDiscussionAvailability, $product->discussionAvailability());
+        self::assertSame($aTenantId, $product->tenantId());
+        self::assertSame($aProductId, $product->productId());
+        self::assertSame($aProductOwnerId, $product->productOwnerId());
+        self::assertSame($aProductName, $product->name());
+        self::assertSame($aProductDescription, $product->description());
+        self::assertSame($aDiscussionAvailability, $product->discussion()->availability());
     }
 }

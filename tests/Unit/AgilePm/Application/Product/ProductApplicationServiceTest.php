@@ -45,7 +45,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertNotNull($productWithStartedDiscussionInitiation->discussionInitiationId());
+        self::assertNotNull($productWithStartedDiscussionInitiation->discussionInitiationId());
 
         $discussionId = strtoupper(Uuid::uuid4()->toString());
 
@@ -63,7 +63,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertEquals($discussionId, $productWithInitiatedDiscussion->discussion()->descriptor()->id());
+        self::assertEquals($discussionId, $productWithInitiatedDiscussion->discussion()->descriptor()->id());
     }
 
     public function testNewProduct(): void
@@ -85,9 +85,9 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 new ProductId($newProductId)
             );
 
-        $this->assertNotNull($newProduct);
-        $this->assertEquals('My Product', $newProduct->name());
-        $this->assertEquals('The description of My Product.', $newProduct->description());
+        self::assertNotNull($newProduct);
+        self::assertEquals('My Product', $newProduct->name());
+        self::assertEquals('The description of My Product.', $newProduct->description());
     }
 
     public function testNewProductWithDiscussion(): void
@@ -109,10 +109,10 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 new ProductId($newProductId)
             );
 
-        $this->assertNotNull($newProduct);
-        $this->assertEquals('My Product', $newProduct->name());
-        $this->assertEquals('The description of My Product.', $newProduct->description());
-        $this->assertEquals(DiscussionAvailability::REQUESTED, $newProduct->discussion()->availability());
+        self::assertNotNull($newProduct);
+        self::assertEquals('My Product', $newProduct->name());
+        self::assertEquals('The description of My Product.', $newProduct->description());
+        self::assertEquals(DiscussionAvailability::REQUESTED, $newProduct->discussion()->availability());
     }
 
     public function testRequestProductDiscussion(): void
@@ -132,7 +132,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+        self::assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
     }
 
     public function testRetryProductDiscussionRequest(): void
@@ -152,7 +152,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+        self::assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
 
         $this->productApplicationService->startDiscussionInitiation(
             new StartDiscussionInitiationCommand(
@@ -167,7 +167,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
+        self::assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
 
         $this->productApplicationService->retryProductDiscussionRequest(
             new RetryProductDiscussionRequestCommand(
@@ -182,8 +182,8 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRetriedRequestedDiscussion->discussion()->availability());
-        $this->assertEquals($productWithDiscussionInitiation->discussionInitiationId(), $productWithRetriedRequestedDiscussion->discussionInitiationId());
+        self::assertEquals(DiscussionAvailability::REQUESTED, $productWithRetriedRequestedDiscussion->discussion()->availability());
+        self::assertEquals($productWithDiscussionInitiation->discussionInitiationId(), $productWithRetriedRequestedDiscussion->discussionInitiationId());
     }
 
     public function testStartDiscussionInitiation(): void
@@ -203,8 +203,8 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
-        $this->assertNull($productWithRequestedDiscussion->discussionInitiationId());
+        self::assertEquals(DiscussionAvailability::REQUESTED, $productWithRequestedDiscussion->discussion()->availability());
+        self::assertNull($productWithRequestedDiscussion->discussionInitiationId());
 
         $this->productApplicationService->startDiscussionInitiation(
             new StartDiscussionInitiationCommand(
@@ -219,7 +219,7 @@ class ProductApplicationServiceTest extends ProductApplicationCommonTest
                 $product->productId()
             );
 
-        $this->assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
+        self::assertNotNull($productWithDiscussionInitiation->discussionInitiationId());
     }
 
     public function testTimeOutProductDiscussionRequest(): void

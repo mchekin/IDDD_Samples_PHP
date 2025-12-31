@@ -28,10 +28,16 @@ class ScheduledBacklogItem extends Entity
 
         parent::__construct();
 
-        $this->setBacklogItemId($aBacklogItemId);
+        if ($aBacklogItemId !== null) {
+            $this->setBacklogItemId($aBacklogItemId);
+        }
         $this->setOrdering($anOrdering);
-        $this->setReleaseId($aReleaseId);
-        $this->setTenantId($aTenantId);
+        if ($aReleaseId !== null) {
+            $this->setReleaseId($aReleaseId);
+        }
+        if ($aTenantId !== null) {
+            $this->setTenantId($aTenantId);
+        }
     }
 
     public function backlogItemId(): BacklogItemId
@@ -46,16 +52,13 @@ class ScheduledBacklogItem extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && $this::class === $anObject::class) {
-            $equalObjects =
-                $this->tenantId()->equals($anObject->tenantId()) &&
-                $this->releaseId()->equals($anObject->releaseId()) &&
-                $this->backlogItemId()->equals($anObject->backlogItemId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->releaseId()->equals($anObject->releaseId()) &&
+            $this->backlogItemId()->equals($anObject->backlogItemId());
     }
 
     public function hashCode(): int
@@ -105,9 +108,7 @@ class ScheduledBacklogItem extends Entity
 
     private function setReleaseId(ReleaseId $aReleaseId): void
     {
-        if ($aReleaseId === null) {
-            throw new \InvalidArgumentException('The release id is required.');
-        }
+        $this->assertArgumentNotNull($aReleaseId, 'The release id is required.');
 
         $this->releaseId = $aReleaseId;
     }
@@ -119,9 +120,7 @@ class ScheduledBacklogItem extends Entity
 
     private function setTenantId(TenantId $aTenantId): void
     {
-        if ($aTenantId === null) {
-            throw new \InvalidArgumentException('The tenant id is required.');
-        }
+        $this->assertArgumentNotNull($aTenantId, 'The tenant id is required.');
 
         $this->tenantId = $aTenantId;
     }

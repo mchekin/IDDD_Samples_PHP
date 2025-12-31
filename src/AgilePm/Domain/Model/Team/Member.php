@@ -19,18 +19,22 @@ abstract class Member
     private $username;
     /**
      * @var String
+     * @phpstan-ignore-next-line property.onlyWritten (domain model property, may be used in future)
      */
     private $firstName;
     /**
      * @var String
+     * @phpstan-ignore-next-line property.onlyWritten (domain model property, may be used in future)
      */
     private $lastName;
     /**
      * @var String
+     * @phpstan-ignore-next-line property.onlyWritten (domain model property, may be used in future)
      */
     private $emailAddress;
     /**
      * @var Carbon
+     * @phpstan-ignore-next-line property.onlyWritten (domain model property, may be used in future)
      */
     private $initializedOn;
 

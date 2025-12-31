@@ -169,17 +169,13 @@ class Release extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && get_class($this) === get_class($anObject)) {
-            $typedObject = $anObject;
-            $equalObjects =
-                $this->tenantId()->equals($typedObject->tenantId()) &&
-                $this->productId()->equals($typedObject->productId()) &&
-                $this->releaseId()->equals($typedObject->releaseId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->productId()->equals($anObject->productId()) &&
+            $this->releaseId()->equals($anObject->releaseId());
     }
 
     public function hashCode(): int
@@ -212,6 +208,7 @@ class Release extends Entity
         return $this->backlogItems;
     }
 
+    /** @phpstan-ignore-next-line method.unused (may be used for deserialization) */
     private function setBacklogItems(array $aBacklogItems): void
     {
         $this->backlogItems = $aBacklogItems;

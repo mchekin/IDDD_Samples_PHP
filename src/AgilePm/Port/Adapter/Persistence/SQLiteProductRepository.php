@@ -18,11 +18,10 @@ use Ramsey\Uuid\Uuid;
  */
 class SQLiteProductRepository implements ProductRepository
 {
-    private PDO $database;
-
     public function __construct(string $databasePath)
     {
-        $this->database = SQLiteProvider::instance()->databaseFrom($databasePath);
+        // Ensure database is initialized
+        SQLiteProvider::instance()->databaseFrom($databasePath);
     }
 
     public function allProductsOfTenant(TenantId $aTenantId): ProductCollection
@@ -40,6 +39,10 @@ class SQLiteProductRepository implements ProductRepository
         ]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var Product $product */
             $product = $unitOfWork->deserializeFromJson($row['data'], Product::class);
             if ($product->tenantId()->equals($aTenantId)) {
                 $products[] = $product;
@@ -68,6 +71,10 @@ class SQLiteProductRepository implements ProductRepository
         ]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var Product $product */
             $product = $unitOfWork->deserializeFromJson($row['data'], Product::class);
             if ($product->tenantId()->equals($aTenantId)
                 && $product->discussionInitiationId() === $aDiscussionInitiationId) {
@@ -89,6 +96,7 @@ class SQLiteProductRepository implements ProductRepository
             throw new \RuntimeException('Product not found: ' . $aProductId->id());
         }
 
+        assert($product instanceof Product);
         return $product;
     }
 

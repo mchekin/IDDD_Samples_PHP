@@ -84,7 +84,7 @@ class DomainEventPublisher
 
     private function hasSubscribers(): bool
     {
-        return $this->subscribers !== null && count($this->subscribers) > 0;
+        return count($this->subscribers) > 0;
     }
 
     private function subscribers(): array

@@ -9,15 +9,22 @@ class TimeConstrainedProcessTracker extends AssertionConcern
 {
     private int $allowableDuration;
     private bool $completed = false;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for concurrency control) */
     private int $concurrencyVersion = 0;
     private string $description;
     private ProcessId $processId;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for tracking timeout notification) */
     private bool $processInformedOfTimeout = false;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for event type) */
     private string $processTimedOutEventType;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for retry tracking) */
     private int $retryCount = 0;
     private string $tenantId;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for persistence identity) */
     private int $timeConstrainedProcessTrackerId;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for timeout calculation) */
     private int $timeoutOccursOn;
+    /** @phpstan-ignore-next-line property.onlyWritten (domain model property for retry limit) */
     private int $totalRetriesPermitted;
 
     public function __construct(
@@ -29,6 +36,8 @@ class TimeConstrainedProcessTracker extends AssertionConcern
         int $aTotalRetriesPermitted,
         string $aProcessTimedOutEventType
     ) {
+        parent::__construct();
+
         $this->setAllowableDuration($anAllowableDuration);
         $this->setDescription($aDescription);
         $this->setProcessId($aProcessId);

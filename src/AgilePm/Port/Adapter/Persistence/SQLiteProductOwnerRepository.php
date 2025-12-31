@@ -16,11 +16,10 @@ use PDO;
  */
 class SQLiteProductOwnerRepository implements ProductOwnerRepository
 {
-    private PDO $database;
-
     public function __construct(string $databasePath)
     {
-        $this->database = SQLiteProvider::instance()->databaseFrom($databasePath);
+        // Ensure database is initialized
+        SQLiteProvider::instance()->databaseFrom($databasePath);
     }
 
     public function allProductOwnersOfTenant(TenantId $aTenantId): ProductOwnerCollection
@@ -38,6 +37,10 @@ class SQLiteProductOwnerRepository implements ProductOwnerRepository
         ]);
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+                continue;
+            }
+            /** @var ProductOwner $productOwner */
             $productOwner = $unitOfWork->deserializeFromJson($row['data'], ProductOwner::class);
             if ($productOwner->tenantId()->equals($aTenantId)) {
                 $productOwners[] = $productOwner;
@@ -58,6 +61,7 @@ class SQLiteProductOwnerRepository implements ProductOwnerRepository
             throw new \RuntimeException('ProductOwner not found: ' . $aUsername);
         }
 
+        assert($productOwner instanceof ProductOwner);
         return $productOwner;
     }
 

@@ -49,7 +49,7 @@ final class ProductDiscussion extends ValueObject
 
     public function nowReady(DiscussionDescriptor $aDescriptor): self
     {
-        if ($aDescriptor === null || $aDescriptor->isUndefined()) {
+        if ($aDescriptor->isUndefined()) {
             throw new \InvalidArgumentException('The discussion descriptor must be defined.');
         }
         if (!$this->availability()->isRequested()) {
@@ -57,6 +57,11 @@ final class ProductDiscussion extends ValueObject
         }
 
         return new self($aDescriptor, DiscussionAvailability::READY);
+    }
+
+    public function __toString(): string
+    {
+        return "ProductDiscussion [availability={$this->availability->name}, descriptor={$this->descriptor->id()}]";
     }
 
     private function setAvailability(DiscussionAvailability $anAvailability): void

@@ -28,10 +28,16 @@ class CommittedBacklogItem extends Entity
 
         parent::__construct();
 
-        $this->setBacklogItemId($aBacklogItemId);
+        if ($aBacklogItemId !== null) {
+            $this->setBacklogItemId($aBacklogItemId);
+        }
         $this->setOrdering($anOrdering);
-        $this->setSprintId($aSprintId);
-        $this->setTenantId($aTenantId);
+        if ($aSprintId !== null) {
+            $this->setSprintId($aSprintId);
+        }
+        if ($aTenantId !== null) {
+            $this->setTenantId($aTenantId);
+        }
     }
 
     public function backlogItemId(): BacklogItemId
@@ -56,16 +62,13 @@ class CommittedBacklogItem extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && $this::class === $anObject::class) {
-            $equalObjects =
-                $this->tenantId()->equals($anObject->tenantId()) &&
-                $this->sprintId()->equals($anObject->sprintId()) &&
-                $this->backlogItemId()->equals($anObject->backlogItemId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->sprintId()->equals($anObject->sprintId()) &&
+            $this->backlogItemId()->equals($anObject->backlogItemId());
     }
 
     public function hashCode(): int

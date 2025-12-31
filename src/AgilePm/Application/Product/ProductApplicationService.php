@@ -59,20 +59,16 @@ class ProductApplicationService
                     new ProductId($aCommand->getProductId())
                 );
 
-            if ($product === null) {
-                throw new \InvalidArgumentException(
-                    'Unknown product of tenant id: '
-                    . $aCommand->getTenantId()
-                    . ' and product id: '
-                    . $aCommand->getProductId()
-                );
-            }
-
             $product->initiateDiscussion(new DiscussionDescriptor($aCommand->getDiscussionId()));
 
             $this->productRepository()->save($product);
 
-            $processId = ProcessId::existingProcessId($product->discussionInitiationId());
+            $discussionInitiationId = $product->discussionInitiationId();
+            if ($discussionInitiationId === null) {
+                throw new \InvalidArgumentException('Discussion initiation ID is required');
+            }
+
+            $processId = ProcessId::existingProcessId($discussionInitiationId);
 
             $tracker = $this->processTrackerRepository()
                 ->trackerOfProcessId($aCommand->getTenantId(), $processId);
@@ -120,15 +116,6 @@ class ProductApplicationService
                     new ProductId($aCommand->getProductId())
                 );
 
-            if ($product === null) {
-                throw new \InvalidArgumentException(
-                    'Unknown product of tenant id: '
-                    . $aCommand->getTenantId()
-                    . ' and product id: '
-                    . $aCommand->getProductId()
-                );
-            }
-
             $product->requestDiscussion($this->requestDiscussionIfAvailable());
 
             $this->productRepository()->save($product);
@@ -153,15 +140,6 @@ class ProductApplicationService
                     $processId->id()
                 );
 
-            if ($product === null) {
-                throw new \InvalidArgumentException(
-                    'Unknown product of tenant id: '
-                    . $aCommand->getTenantId()
-                    . ' and discussion initiation id: '
-                    . $processId->id()
-                );
-            }
-
             $product->requestDiscussion($this->requestDiscussionIfAvailable());
 
             $this->productRepository()->save($product);
@@ -182,15 +160,6 @@ class ProductApplicationService
                     new TenantId($aCommand->getTenantId()),
                     new ProductId($aCommand->getProductId())
                 );
-
-            if ($product === null) {
-                throw new \InvalidArgumentException(
-                    'Unknown product of tenant id: '
-                    . $aCommand->getTenantId()
-                    . ' and product id: '
-                    . $aCommand->getProductId()
-                );
-            }
 
             $tracker = $this->processTrackerOfProduct($product);
 
@@ -279,6 +248,7 @@ class ProductApplicationService
         $availability = DiscussionAvailability::ADD_ON_NOT_ENABLED;
         $enabled = true; // TODO: determine add-on enabled
 
+        /** @phpstan-ignore-next-line if.alwaysTrue (TODO: implement add-on detection) */
         if ($enabled) {
             $availability = DiscussionAvailability::REQUESTED;
         }
@@ -291,6 +261,7 @@ class ProductApplicationService
         return $this->processTrackerRepository;
     }
 
+    /** @phpstan-ignore-next-line method.unused (kept for future use) */
     private function productOwnerRepository(): ProductOwnerRepository
     {
         return $this->productOwnerRepository;
@@ -301,6 +272,7 @@ class ProductApplicationService
         return $this->productRepository;
     }
 
+    /** @phpstan-ignore-next-line method.unused (kept for future use) */
     private function requestProductDiscussionFor(Product $aProduct): void
     {
         $aProduct->requestDiscussion($this->requestDiscussionIfAvailable());

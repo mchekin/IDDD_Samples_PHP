@@ -15,7 +15,7 @@ class ProductOwnerTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testCreate()
+    public function testCreate(): void
     {
         $aUsername = 'john.smith';
         $aFirstName = 'John';
@@ -33,8 +33,8 @@ class ProductOwnerTest extends TestCase
             $anInitializedOn
         );
 
-        $this->assertSame($aTenantId, $productOwner->getTenantId());
-        $this->assertSame($aUsername, $productOwner->getUsername());
-        $this->assertEquals(new ProductOwnerId($aTenantId, $aUsername), $productOwner->productOwnerId());
+        self::assertSame($aTenantId, $productOwner->tenantId());
+        self::assertSame($aUsername, $productOwner->username());
+        self::assertEquals(new ProductOwnerId($aTenantId, $aUsername), $productOwner->productOwnerId());
     }
 }

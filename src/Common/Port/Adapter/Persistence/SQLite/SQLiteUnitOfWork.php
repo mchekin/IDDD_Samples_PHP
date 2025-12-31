@@ -80,6 +80,9 @@ class SQLiteUnitOfWork
         $this->identityMap[$key] = $value;
     }
 
+    /**
+     * @param class-string $className
+     */
     public function read(string $key, string $className): ?object
     {
         // Check identity map first
@@ -97,7 +100,15 @@ class SQLiteUnitOfWork
             return null;
         }
 
+        if (!is_array($row) || !isset($row['data']) || !is_string($row['data'])) {
+            return null;
+        }
+
         $data = json_decode($row['data'], true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($data)) {
+            throw new \RuntimeException('Failed to decode JSON data for key: ' . $key);
+        }
+
         $object = $this->deserialize($data, $className);
 
         // Add to identity map
@@ -119,10 +130,14 @@ class SQLiteUnitOfWork
     /**
      * Deserialize JSON data to an object
      * Public method for repositories to use when querying directly
+     * @param class-string $className
      */
     public function deserializeFromJson(string $json, string $className): object
     {
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($data)) {
+            throw new \RuntimeException('Failed to decode JSON data');
+        }
         return $this->deserialize($data, $className);
     }
 
@@ -176,7 +191,10 @@ class SQLiteUnitOfWork
         return $data;
     }
 
-    private function serializeValue($value)
+    /**
+     * @return mixed
+     */
+    private function serializeValue(mixed $value): mixed
     {
         if (is_object($value)) {
             // Handle enums specially
@@ -198,6 +216,9 @@ class SQLiteUnitOfWork
         return $value;
     }
 
+    /**
+     * @param class-string $className
+     */
     private function deserialize(array $data, string $className): object
     {
         $reflection = new \ReflectionClass($className);
@@ -240,11 +261,19 @@ class SQLiteUnitOfWork
         return $object;
     }
 
-    private function deserializeValue($value, \ReflectionProperty $property)
+    /**
+     * @return mixed
+     */
+    private function deserializeValue(mixed $value, \ReflectionProperty $property): mixed
     {
         // Handle nested objects, arrays, etc.
         if (is_array($value) && isset($value['__class__'])) {
-            return $this->deserialize($value, $value['__class__']);
+            $className = $value['__class__'];
+            if (!is_string($className)) {
+                throw new \RuntimeException('Invalid __class__ value in deserialization');
+            }
+            /** @var class-string $className */
+            return $this->deserialize($value, $className);
         }
 
         return $value;

@@ -166,17 +166,13 @@ class Sprint extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && get_class($this) === get_class($anObject)) {
-            $typedObject = $anObject;
-            $equalObjects =
-                $this->tenantId()->equals($typedObject->tenantId()) &&
-                $this->productId()->equals($typedObject->productId()) &&
-                $this->sprintId()->equals($typedObject->sprintId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->productId()->equals($anObject->productId()) &&
+            $this->sprintId()->equals($anObject->sprintId());
     }
 
     public function hashCode(): int
@@ -204,6 +200,7 @@ class Sprint extends Entity
         return $this->backlogItems;
     }
 
+    /** @phpstan-ignore-next-line method.unused (may be used for deserialization) */
     private function setBacklogItems(array $aBacklogItems): void
     {
         $this->backlogItems = $aBacklogItems;
@@ -225,9 +222,7 @@ class Sprint extends Entity
 
     private function setGoals(string $aGoals): void
     {
-        if ($aGoals !== null) {
-            $this->assertArgumentLength($aGoals, 500, 'The goals must be 500 characters or less.');
-        }
+        $this->assertArgumentLength($aGoals, 500, 'The goals must be 500 characters or less.');
 
         $this->goals = $aGoals;
     }

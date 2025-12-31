@@ -81,17 +81,13 @@ class BacklogItem extends Entity
 
     public function equals(object $anObject): bool
     {
-        $equalObjects = false;
-
-        if ($anObject !== null && get_class($this) === get_class($anObject)) {
-            $typedObject = $anObject;
-            $equalObjects =
-                $this->tenantId()->equals($typedObject->tenantId()) &&
-                $this->productId()->equals($typedObject->productId()) &&
-                $this->backlogItemId()->equals($typedObject->backlogItemId());
+        if (!$anObject instanceof self) {
+            return false;
         }
 
-        return $equalObjects;
+        return $this->tenantId()->equals($anObject->tenantId()) &&
+            $this->productId()->equals($anObject->productId()) &&
+            $this->backlogItemId()->equals($anObject->backlogItemId());
     }
 
     public function hashCode(): int
